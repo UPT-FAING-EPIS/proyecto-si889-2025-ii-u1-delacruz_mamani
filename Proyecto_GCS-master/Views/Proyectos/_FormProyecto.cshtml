@@ -1,0 +1,39 @@
+﻿@model Proyecto_GCS.Models.Proyecto
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+        <label class="block text-sm font-medium mb-1">Código</label>
+        @Html.TextBoxFor(m => m.Codigo, new { @class = "w-full rounded-xl border border-slate-300 px-4 py-2" })
+        @Html.ValidationMessageFor(m => m.Codigo, "", new { @class = "text-red-600 text-sm" })
+    </div>
+    <div>
+        <label class="block text-sm font-medium mb-1">Nombre</label>
+        @Html.TextBoxFor(m => m.Nombre, new { @class = "w-full rounded-xl border border-slate-300 px-4 py-2" })
+        @Html.ValidationMessageFor(m => m.Nombre, "", new { @class = "text-red-600 text-sm" })
+    </div>
+</div>
+
+<div>
+    <label class="block text-sm font-medium mb-1">Descripción</label>
+    @Html.TextAreaFor(m => m.Descripcion, 4, 20, new { @class = "w-full rounded-xl border border-slate-300 px-4 py-2" })
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div>
+        <label class="block text-sm font-medium mb-1">Estado</label>
+        @Html.DropDownListFor(m => m.Estado, new SelectList(new[] { "Activo", "Pausado", "Cerrado" }), new { @class = "w-full rounded-xl border border-slate-300 px-4 py-2" })
+    </div>
+    <div>
+        <label class="block text-sm font-medium mb-1">Fecha Inicio</label>
+        @Html.TextBoxFor(m => m.FechaInicio, "{0:yyyy-MM-dd}", new { type = "date", @class = "w-full rounded-xl border border-slate-300 px-4 py-2" })
+    </div>
+    <div>
+        <label class="block text-sm font-medium mb-1">Fecha Fin</label>
+        @Html.TextBoxFor(m => m.FechaFin, "{0:yyyy-MM-dd}", new { type = "date", @class = "w-full rounded-xl border border-slate-300 px-4 py-2" })
+    </div>
+</div>
+
+<div>
+    <label class="block text-sm font-medium mb-1">Owner (IdUsuario)</label>
+    @Html.TextBoxFor(m => m.IdUsuarioOwner, new { type = "number", min = "1", @class = "w-full rounded-xl border border-slate-300 px-4 py-2" })
+</div>
+

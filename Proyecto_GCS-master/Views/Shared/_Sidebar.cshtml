@@ -1,0 +1,99 @@
+﻿@{
+    var controller = (ViewContext.RouteData.Values["controller"] ?? "").ToString();
+    var action = (ViewContext.RouteData.Values["action"] ?? "").ToString();
+    Func<string, string, bool> isActive = (c, a) =>
+    {
+        var cOk = controller.Equals(c, System.StringComparison.OrdinalIgnoreCase);
+        var aOk = string.IsNullOrEmpty(a) || action.Equals(a, System.StringComparison.OrdinalIgnoreCase);
+        return cOk && aOk;
+    };
+}
+
+<aside id="sidebar"
+       class="row-span-2 col-start-1 col-end-2 sticky top-0 h-screen bg-[#191919] text-white shadow-[0_10px_25px_-5px_rgb(0_0_0_/_0.35)] animate-slideIn">
+
+    <!-- Brand -->
+    <div class="h-14 flex items-center gap-3 px-3 border-b border-white/10">
+        <div class="h-9 w-9 grid place-content-center rounded-xl bg-white/10 text-white font-bold">G</div>
+        <div class="flex flex-col label">
+            <span class="font-extrabold tracking-wide leading-5">GCS</span>
+            <span class="text-xs text-white/60 leading-3">Gestión Config.</span>
+        </div>
+    </div>
+
+    <nav class="px-2 py-3 overflow-y-auto h-[calc(100vh-56px)]">
+        <!-- General -->
+        <div class="px-2 text-[11px] uppercase tracking-wider text-white/50 mb-2 label">General</div>
+        <ul class="space-y-1">
+            @*<li>
+                <a href="@Url.Action("Index","Home")"
+                   class="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition
+                  hover:bg-white/10 @((isActive("Home","Index")) ? "bg-violet-600 text-white hover:bg-violet-600" : "text-white/80")">
+                    <svg class="h-5 w-5 opacity-90" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 9.75 12 3l9 6.75M4.5 10.5V21h15V10.5M9 21v-6h6v6" />
+                    </svg>
+                    <span class="label">Inicio</span>
+                </a>
+            </li>*@
+            <li>
+                <a href="@Url.Action("Index","Proyectos")"
+                   class="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition
+                  hover:bg-white/10 @((isActive("Proyecto","")) ? "bg-violet-600 text-white hover:bg-violet-600" : "text-white/80")">
+                    <svg class="h-5 w-5 opacity-90" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 7h4v10H6zM14 7h4v6h-4z" />
+                    </svg>
+                    <span class="label">Proyectos</span>
+                </a>
+            </li>
+            @*<li>
+                <a href="@Url.Action("Index","Configuracion")"
+                   class="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition
+                  hover:bg-white/10 @((isActive("Configuracion","")) ? "bg-violet-600 text-white hover:bg-violet-600" : "text-white/80")">
+                    <svg class="h-5 w-5 opacity-90" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M10.325 4.317l.894-1.789a1 1 0 011.562-.272l1.287 1.156a8.003 8.003 0 012.69 0l1.287-1.156a1 1 0 011.562.272l.894 1.789a8.003 8.003 0 011.55 1.55l1.789.894a1 1 0 01.272 1.562l-1.156 1.287a8.003 8.003 0 010 2.69l1.156 1.287a1 1 0 01-.272 1.562l-1.789.894a8.003 8.003 0 01-1.55 1.55l-.894 1.789a1 1 0 01-1.562.272l-1.287-1.156a8.003 8.003 0 01-2.69 0l-1.287 1.156a1 1 0 01-1.562-.272l-.894-1.789a8.003 8.003 0 01-1.55-1.55l-1.789-.894a1 1 0 01-.272-1.562l1.156-1.287a8.003 8.003 0 010-2.69L2.713 8.32a1 1 0 01.272-1.562l1.789-.894a8.003 8.003 0 011.55-1.55z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    <span class="label">Configuración</span>
+                </a>
+            </li>*@
+        </ul>
+
+        <!-- Seguridad -->
+        <!--<div class="mt-6 px-2 text-[11px] uppercase tracking-wider text-white/50 mb-2 label">Seguridad</div>
+        <ul class="space-y-1">
+            <li>
+                <a href="@Url.Action("Index","Usuario")"
+                   class="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition
+                  hover:bg-white/10 @((isActive("Usuario","")) ? "bg-violet-600 text-white hover:bg-violet-600" : "text-white/80")">
+                    <svg class="h-5 w-5 opacity-90" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 20v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2M7 10a4 4 0 100-8 4 4 0 000 8zM17 11a3 3 0 110-6 3 3 0 010 6z" />
+                    </svg>
+                    <span class="label">Usuarios</span>
+                </a>
+            </li>
+            <li>
+                <a href="@Url.Action("Index","Roles")"
+                   class="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition
+                  hover:bg-white/10 @((isActive("Roles","")) ? "bg-violet-600 text-white hover:bg-violet-600" : "text-white/80")">
+                    <svg class="h-5 w-5 opacity-90" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>
+                    <span class="label">Roles & Permisos</span>
+                </a>
+            </li>
+        </ul>-->
+    </nav>
+
+    <!-- Footer -->
+    <div class="absolute bottom-3 left-2 right-2 text-xs text-white/60">
+        <div class="flex items-center gap-2">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 16v-4M12 8h.01" />
+            </svg>
+            <span>Taskio • v1.0</span>
+        </div>
+    </div>
+</aside>
+

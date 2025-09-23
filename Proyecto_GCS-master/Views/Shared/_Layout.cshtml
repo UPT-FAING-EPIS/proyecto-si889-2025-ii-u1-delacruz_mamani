@@ -1,0 +1,267 @@
+﻿@{
+    Layout = null;
+    var userName = (User?.Identity?.IsAuthenticated ?? false) ? User.Identity.Name : "Invitado";
+}
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewBag.Title - Taskio - Gestor de proyectos</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    @* Tailwind + configuración + tema *@
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: { brand: { DEFAULT: '#7C3AED', 700: '#6D28D9' } },
+                    boxShadow: { soft: '0 10px 25px -5px rgb(0 0 0 / 0.15)' }
+                }
+            }
+        }
+    </script>
+
+    <script>
+        // Tema (dark/light) persistente
+        (function () {
+            var prefer = localStorage.getItem('theme');
+            if (!prefer) prefer = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            if (prefer === 'dark') document.documentElement.classList.add('dark');
+            else document.documentElement.classList.remove('dark');
+        })();
+    </script>
+
+    <!-- AlpineJS -->
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.3.3/css/dataTables.dataTables.css" />
+
+    <style>
+        /* Oculta hasta que Alpine esté listo */
+        [x-cloak] {
+            display: none !important;
+        }
+
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px) }
+            to   { opacity: 1; transform: none }
+        }
+        .fade-in { animation: fadeIn .35s ease-out }
+
+        @@keyframes slideIn {
+            from { transform: translateX(-12px); opacity: 0 }
+            to   { transform: translateX(0); opacity: 1 }
+        }
+        .animate-slideIn { animation: slideIn .25s ease-out }
+    </style>
+
+    <script>
+      // ---- Helpers globales ----
+      window.toast = function(msg, type='ok'){
+        var el = document.getElementById('toast');
+        if(!el){
+          el = document.createElement('div');
+          el.id = 'toast';
+          el.style.display = 'none';
+          document.body.appendChild(el);
+        }
+        el.className =
+          'fixed right-4 bottom-4 z-50 px-4 py-3 rounded-xl shadow text-sm fade-in ' +
+          (type==='ok'   ? 'bg-brand text-white'
+           : type==='warn'? 'bg-amber-500 text-white'
+                          : 'bg-red-600 text-white');
+        el.textContent = msg;
+        el.style.display = 'block';
+        setTimeout(function(){ el.style.display='none'; }, 2000);
+      };
+
+      // Cambiar estado de proyecto (usable desde Index/Detalle)
+      window.cambiarEstado = async function(id, estado){
+        try{
+          const r = await fetch('@Url.Action("CambiarEstado","Proyectos")', {
+            method:'POST',
+            headers:{'Content-Type':'application/x-www-form-urlencoded'},
+            body:new URLSearchParams({ id, estado })
+          });
+          const d = await r.json();
+          if(d.ok){ toast('Estado actualizado'); location.reload(); }
+          else toast('No se pudo cambiar','error');
+        }catch(e){ toast('Error de red','error'); }
+      };
+
+      // ---- Store Alpine: Proyectos (Crear rápido) ----
+      document.addEventListener('alpine:init', () => {
+        Alpine.store('proyectos', {
+          openCrear: false,
+          codigo: '',
+          nombre: '',
+          async crearRapido(){
+            if(!this.codigo || !this.nombre){ toast('Completa Código y Nombre','warn'); return; }
+            try{
+              const r = await fetch('@Url.Action("CrearRapido","Proyectos")', {
+                method:'POST',
+                headers:{ 'Content-Type':'application/x-www-form-urlencoded' },
+                body:new URLSearchParams({ codigo:this.codigo, nombre:this.nombre })
+              });
+              const d = await r.json();
+              if(d.ok){
+                toast('Proyecto creado');
+                this.openCrear = false;
+                this.codigo = ''; this.nombre = '';
+                window.location = '@Url.Action("Detalle","Proyectos")' + '/' + d.id;
+              }else{
+                toast(d.msg || 'No se pudo crear','error');
+              }
+            }catch(e){
+              toast('Error de red','error');
+            }
+          }
+        });
+      });
+    </script>
+</head>
+
+<body x-data class="min-h-screen bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-200">
+    <div id="app" class="grid grid-rows-[56px_1fr] grid-cols-[260px_1fr] transition-[grid-template-columns] duration-200 ease-out">
+        @Html.Partial("_Sidebar")
+
+        <!-- TOPBAR -->
+        <header class="col-start-2 col-end-3 row-start-1 h-14 bg-white/80 backdrop-blur border-b border-slate-200 px-3
+                   flex items-center justify-between dark:bg-slate-800/60 dark:border-slate-700">
+            <div class="flex items-center gap-2">
+                <button id="btnCollapse" type="button"
+                        class="hidden lg:inline-flex p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
+                        title="Contraer/Expandir">
+                    ☰
+                </button>
+                <span class="ml-1 font-semibold">Taskio - Gestor de proyectos</span>
+            </div>
+            <div class="flex items-center gap-3">
+                @Html.Partial("_ThemeToggle")
+                <div class="flex items-center gap-2">
+                    <span class="hidden sm:inline">@userName</span>
+                    @if (User?.Identity?.IsAuthenticated ?? false)
+                    {
+                        <a href="@Url.Action("Logout","Account")"
+                           class="inline-flex items-center gap-1 text-sm px-2 py-1 rounded-lg border border-red-300 text-red-600 hover:bg-red-50
+                      dark:border-red-800 dark:hover:bg-red-900/30">Salir</a>
+                    }
+                </div>
+            </div>
+        </header>
+
+        <!-- CONTENT -->
+        <main class="col-start-2 col-end-3 row-start-2 p-5 bg-slate-50 dark:bg-slate-900 fade-in">
+            @RenderBody()
+
+            @* Modal Crear Rápido disponible en todas las vistas (se muestra solo cuando $store.proyectos.openCrear = true) *@
+            <div x-cloak x-show="$store.proyectos.openCrear"
+                 class="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
+                <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-soft dark:bg-slate-800">
+                    <h3 class="text-lg font-semibold mb-4">Crear proyecto rápido</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="text-sm">Código</label>
+                            <input x-model="$store.proyectos.codigo" class="w-full rounded-xl border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700" />
+                        </div>
+                        <div>
+                            <label class="text-sm">Nombre</label>
+                            <input x-model="$store.proyectos.nombre" class="w-full rounded-xl border border-slate-300 px-3 py-2 dark:bg-slate-900 dark:border-slate-700" />
+                        </div>
+                    </div>
+                    <div class="mt-5 flex justify-end gap-2">
+                        <button class="px-4 py-2 rounded-xl border dark:border-slate-700"
+                                x-on:click="$store.proyectos.openCrear=false">
+                            Cancelar
+                        </button>
+                        <button class="px-4 py-2 rounded-xl bg-brand text-white hover:bg-brand-700"
+                                x-on:click="$store.proyectos.crearRapido()">
+                            Crear
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    @RenderSection("styles", required: false)
+    @RenderSection("scripts", required: false)
+
+    <!-- jQuery + DataTables JS (al final para mejor rendimiento) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://cdn.datatables.net/2.3.3/js/dataTables.js"></script>
+
+    <script>
+        // Collapse del sidebar en desktop (oculta textos)
+        document.getElementById('btnCollapse')?.addEventListener('click', () => {
+            const app = document.getElementById('app');
+            const collapsed = app.classList.toggle('collapsed');
+            app.style.gridTemplateColumns = collapsed ? '72px 1fr' : '260px 1fr';
+            document.querySelectorAll('.label').forEach(el => el.style.display = collapsed ? 'none' : '');
+        });
+
+        // ====== DataTable de Miembros (auto-init si existe #tablaMiembros y ProyectosCfg) ======
+        document.addEventListener('DOMContentLoaded', function () {
+            const $tabla = window.jQuery ? jQuery('#tablaMiembros') : null;
+            if (!$tabla || !$tabla.length) return;               // No hay tabla en esta vista
+            if (!window.ProyectosCfg || !window.ProyectosCfg.urls) return; // No hay config
+
+            const idProyecto = window.ProyectosCfg.idProyecto;
+            const U = window.ProyectosCfg.urls;
+
+            const tabla = $tabla.DataTable({
+                ajax: {
+                    url: U.MiembrosJson + '?idProyecto=' + idProyecto,
+                    dataSrc: ''
+                },
+                columns: [
+                    { data: 'Nombres' },
+                    { data: 'Correo' },
+                    {
+                        data: 'Estado',
+                        render: function (data) {
+                            return data
+                                ? '<span class="px-2 py-1 rounded bg-green-100 text-green-700 text-xs">Activo</span>'
+                                : '<span class="px-2 py-1 rounded bg-slate-200 text-slate-700 text-xs">Inactivo</span>';
+                        }
+                    },
+                    { data: 'RolMiembro' },
+                    {
+                        data: null,
+                        orderable: false,
+                        searchable: false,
+                        render: function (data, type, row) {
+                            if (row.RolMiembro === 'Owner') {
+                                return '<span class="text-xs text-slate-500">—</span>';
+                            }
+                            return `<button class="btnQuitar px-2 py-1 rounded border border-red-300 text-red-600 text-xs" data-id="${row.IdUsuario}">Quitar</button>`;
+                        }
+                    }
+                ],
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+                }
+            });
+
+            // Quitar miembro
+            $tabla.on('click', '.btnQuitar', function () {
+                const idUsuario = this.getAttribute('data-id');
+                fetch(U.QuitarMiembro, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ idProyecto: idProyecto, idUsuario: idUsuario })
+                })
+                    .then(r => r.json())
+                    .then(d => {
+                        if (d.ok) { toast('Miembro quitado'); tabla.ajax.reload(null, false); }
+                        else { toast(d.msg || 'No se pudo quitar', 'error'); }
+                    })
+                    .catch(() => toast('Error de red', 'error'));
+            });
+        });
+    </script>
+</body>
+</html>

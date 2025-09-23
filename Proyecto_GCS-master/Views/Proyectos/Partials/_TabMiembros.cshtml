@@ -1,0 +1,117 @@
+﻿<div class="space-y-5" x-data="{ openAdd:false, openInvite:false, qUsuario:'', resultados:[], rolProyecto:'Miembro', rolSistema:'', correo:'' }">
+
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="text-sm text-slate-500">Gestión de miembros del proyecto</div>
+
+        <div class="flex items-center gap-3">
+            <div class="relative">
+                <button class="px-3 py-2 rounded-lg border hover:bg-slate-50" x-on:click="openAdd=!openAdd">Agregar miembro</button>
+
+                <!-- Panel agregar -->
+                <div x-cloak x-show="openAdd" x-on:click.outside="openAdd=false"
+                     class="absolute right-0 mt-2 w-[34rem] rounded-2xl border bg-white shadow p-4 space-y-3 z-10">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="col-span-2">
+                            <input x-model="qUsuario"
+                                   x-on:input.debounce.300ms="async () => {
+                            if(qUsuario.trim().length<2){ resultados=[]; return; }
+                                                          const r=await fetch(window.ProyectosCfg.urls.BuscarUsuarios + '?q=' + encodeURIComponent(qUsuario));
+                                                          resultados=await r.json();
+                                                          }"
+                                                          placeholder="Buscar usuario por nombre o correo..."
+                                                          class="w-full rounded-xl border px-3 py-2" />
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-500">Rol en el proyecto</label>
+                            <select x-model="rolProyecto" class="w-full rounded-xl border px-3 py-2">
+                                <option>Miembro</option>
+                                <option>Dev</option>
+                                <option>QA</option>
+                                <option>PM</option>
+                                <option>PO</option>
+                                <option>Líder</option>
+                            </select>
+                        </div>
+                        @* Rol del sistema (opcional) *@
+                    </div>
+
+                    <div class="mt-3 border rounded-xl max-h-56 overflow-auto">
+                        <template x-for="u in resultados" :key="u.IdUsuario">
+                            <div class="px-3 py-2 flex items-center justify-between hover:bg-slate-50">
+                                <div>
+                                    <div class="text-sm font-medium" x-text="u.Nombres"></div>
+                                    <div class="text-xs text-slate-500" x-text="u.Correo"></div>
+                                </div>
+                                <button class="text-sm px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
+                                        x-on:click="async () => {
+                                            const r = await fetch(window.ProyectosCfg.urls.AgregarMiembro, {
+                                                method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
+                                                body:new URLSearchParams({
+                                                    idProyecto: window.ProyectosCfg.idProyecto,
+                                                    idUsuario: u.IdUsuario,
+                                                    rolMiembro: rolProyecto || 'Miembro',
+                                                    rolSistema: rolSistema || ''
+                                                })
+                                            });
+                                            await r.json();
+                                            toast('Miembro agregado');
+                                            if (window.jQuery) jQuery('#tablaMiembros').DataTable().ajax.reload(null,false);
+                                            qUsuario=''; resultados=[]; openAdd=false;
+                                        }">
+                                    Agregar
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <button class="px-3 py-2 rounded-lg bg-brand text-white hover:bg-brand-700"
+                    x-on:click="openInvite=true">
+                Invitar por correo
+            </button>
+        </div>
+    </div>
+
+    <div class="rounded-xl border p-2 bg-white">
+        <table id="tablaMiembros" class="display w-full">
+            <thead>
+                <tr>
+                    <th>Miembro</th>
+                    <th>Correo</th>
+                    <th>Estado</th>
+                    <th>Rol en proyecto</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- MODAL INVITAR -->
+    <div x-cloak x-show="openInvite" class="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
+        <div class="w-full max-w-md rounded-2xl bg-white p-6">
+            <h3 class="text-lg font-semibold mb-4">Invitar por correo</h3>
+            <div>
+                <label class="text-sm">Correo</label>
+                <input x-model="correo" type="email" class="mt-1 w-full rounded-xl border px-3 py-2" placeholder="alguien@empresa.com" />
+            </div>
+            <div class="mt-5 flex justify-end gap-2">
+                <button class="px-4 py-2 rounded-xl border" x-on:click="openInvite=false">Cancelar</button>
+                <button class="px-4 py-2 rounded-xl bg-brand text-white"
+                        x-on:click="async () => {
+                            if(!correo){ toast('Ingresa un correo','warn'); return; }
+                            const r = await fetch(window.ProyectosCfg.urls.InvitarPorCorreo, {
+                                method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
+                                body:new URLSearchParams({ idProyecto: window.ProyectosCfg.idProyecto, correo })
+                            });
+                            const d = await r.json();
+                            if(d.ok){ toast('Invitación enviada'); openInvite=false; correo=''; }
+                            else toast(d.msg || 'No se pudo enviar','error');
+                        }">
+                    Enviar invitación
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

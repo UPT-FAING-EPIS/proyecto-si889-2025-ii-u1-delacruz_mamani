@@ -1,0 +1,353 @@
+﻿@model IEnumerable<Proyecto_GCS.Models.Proyecto>
+@using System.Globalization
+@{
+    ViewBag.Title = "Proyectos";
+    var q = (string)ViewBag.Query ?? "";
+    int page = (int)ViewBag.Page;
+    int pageSize = (int)ViewBag.PageSize;
+    int total = (int)ViewBag.Total;
+    int pages = (int)Math.Ceiling(total / (double)pageSize);
+    string estado = (string)(ViewBag.Estado ?? ""); // opcional
+    string orden = (string)(ViewBag.Orden ?? "recientes"); // opcional
+    var es = new CultureInfo("es-ES");
+}
+<style>
+    [x-cloak] {
+        display: none !important
+    }
+</style>
+
+<div x-data="buscadorProyectos()" x-init="init()">
+
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight">Proyectos</h1>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <div class="hidden sm:inline-flex items-center h-9 rounded-xl border px-3 text-sm text-slate-600 bg-white">
+                <span class="font-medium" x-text="visibleCount"></span>&nbsp;de @total
+            </div>
+            <button x-on:click="$store.proyectos.openCrear = true"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand text-white hover:bg-brand-600 shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z" /></svg>
+                Crear proyecto
+            </button>
+        </div>
+    </div>
+
+    <form method="get" class="mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-5 gap-2">
+            <div class="sm:col-span-3">
+                <input name="q" value="@q" placeholder="Buscar por nombre o código…"
+                       x-model="q" @@input.debounce .250ms="filtrar()"
+                       class="w-full rounded-xl border border-slate-300 px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-brand" />
+            </div>
+
+            <div>
+                <select name="estado"
+                        x-model="estadoSel" @@change="filtrar()"
+                        class="w-full rounded-xl border border-slate-300 px-3 py-2 bg-white focus:ring-2 focus:ring-brand">
+                    <option value="" @(string.IsNullOrEmpty(estado) ? "selected" : "")>Todos los estados</option>
+                    <option value="Activo" @(estado == "Activo" ? "selected" : "")>Activo</option>
+                    <option value="Pausado" @(estado == "Pausado" ? "selected" : "")>Pausado</option>
+                    <option value="Cerrado" @(estado == "Cerrado" ? "selected" : "")>Cerrado</option>
+                </select>
+            </div>
+
+            <div>
+                <select name="orden" class="w-full rounded-xl border border-slate-300 px-3 py-2 bg-white focus:ring-2 focus:ring-brand">
+                    <option value="recientes" @(orden == "recientes" ? "selected" : "")>Más recientes</option>
+                    <option value="nombre" @(orden == "nombre" ? "selected" : "")>Nombre (A–Z)</option>
+                    <option value="codigo" @(orden == "codigo" ? "selected" : "")>Código (A–Z)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="mt-2 flex items-center justify-between">
+            <div></div>
+            <div class="flex items-center gap-2">
+                <select name="pageSize" class="rounded-xl border border-slate-300 px-2 py-1.5 text-sm bg-white focus:ring-2 focus:ring-brand">
+                    @foreach(var opt in new[] { 6, 9, 12, 18, 24 }) {
+                        <option value="@opt" @(pageSize == opt ? "selected" : "")>@opt / página</option>
+                    }
+                </select>
+                <button class="px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-sm">Aplicar</button>
+            </div>
+        </div>
+    </form>
+
+    @Html.Partial("_Toast")
+
+    @if(!Model.Any()) {
+        <div class="rounded-2xl border border-dashed p-10 text-center bg-white">
+            <div class="mx-auto w-12 h-12 rounded-full grid place-items-center bg-slate-100 mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-slate-500" viewBox="0 0 24 24" fill="currentColor"><path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z" /></svg>
+            </div>
+            <h3 class="font-semibold">No hay proyectos</h3>
+            <p class="text-slate-500 text-sm mt-1">Crea tu primer proyecto para empezar.</p>
+            <button x-on:click="$store.proyectos.openCrear = true"
+                    class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand text-white hover:bg-brand-600">
+                Crear proyecto
+            </button>
+        </div>
+    } else {
+        <div id="gridProyectos" class="mx-auto px-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            @foreach(var p in Model) {
+                // Fechas formateadas y rango
+                var fi = p.FechaInicio.HasValue ? p.FechaInicio.Value.ToString("dd MMM", es) : "";
+                var ff = p.FechaFin.HasValue ? p.FechaFin.Value.ToString("dd MMM", es) : "";
+                var rango = !string.IsNullOrEmpty(fi) && !string.IsNullOrEmpty(ff)
+                    ? $"{fi} — {ff}"
+                    : !string.IsNullOrEmpty(fi) ? $"Desde {fi}"
+                    : !string.IsNullOrEmpty(ff) ? $"Hasta {ff}"
+                    : "Sin fechas";
+
+                // Badge por estado
+                var badgeClass = p.Estado == "Activo" ? "bg-emerald-50 text-emerald-700"
+                                : p.Estado == "Pausado" ? "bg-amber-50 text-amber-700"
+                                : "bg-rose-50 text-rose-700";
+
+                <div data-proyecto-id="@p.IdProyecto"
+                     class="max-w-[420px] w-full mx-auto group rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition">
+                    <div class="p-5">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <div class="text-[11px] uppercase tracking-wider text-slate-400">@p.Codigo</div>
+                                <a href="@Url.Action("Detalle", new { id = p.IdProyecto })"
+                                   class="mt-0.5 block text-lg font-semibold text-slate-900 hover:text-brand line-clamp-1">
+                                    @p.Nombre
+                                </a>
+                                <p class="mt-1 text-sm text-slate-600 line-clamp-2">@p.Descripcion</p>
+
+                                <!-- Rango de fechas -->
+                                <div class="mt-2 inline-flex items-center gap-2 text-xs text-slate-600">
+                                    <svg class="w-4 h-4 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.5" />
+                                        <path d="M3 9h18" stroke="currentColor" stroke-width="1.5" />
+                                        <path d="M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                                    </svg>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full bg-slate-100 border border-slate-200">
+                                        @rango
+                                    </span>
+                                </div>
+                            </div>
+
+                            <span class="shrink-0 ml-1 inline-flex items-center rounded-full px-2 py-1 text-[11px] font-medium @badgeClass">
+                                @p.Estado
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="px-5 pb-5 flex flex-wrap items-center gap-2">
+                        <a class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 text-sm"
+                           href="@Url.Action("Detalle", new { id = p.IdProyecto })">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M10 17l5-5-5-5v10z" /></svg>
+                            Abrir
+                        </a>
+
+                        <div class="ml-auto relative" x-data="{open:false}">
+                            <button x-on:click="open=!open"
+                                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-300 text-sm hover:bg-slate-50">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="currentColor"><path d="M5 12h14v2H5zM5 7h14v2H5zM5 17h14v2H5z" /></svg>
+                                Estado
+                            </button>
+                            <div x-cloak x-show="open" x-on:click.outside="open=false"
+                                 class="absolute right-0 mt-2 w-36 rounded-xl border border-slate-200 bg-white shadow">
+                                <button class="w-full flex items-center gap-2 px-2.5 py-2 hover:bg-slate-50 text-sm"
+                                        onclick="cambiarEstado(@p.IdProyecto,'Activo')">
+                                    <span class="inline-block w-1 h-4 rounded-full bg-emerald-500"></span>
+                                    <span>Activo</span>
+                                </button>
+                                <button class="w-full flex items-center gap-2 px-2.5 py-2 hover:bg-slate-50 text-sm"
+                                        onclick="cambiarEstado(@p.IdProyecto,'Pausado')">
+                                    <span class="inline-block w-1 h-4 rounded-full bg-amber-500"></span>
+                                    <span>Pausado</span>
+                                </button>
+                                <button class="w-full flex items-center gap-2 px-2.5 py-2 hover:bg-slate-50 text-sm"
+                                        onclick="cambiarEstado(@p.IdProyecto,'Cerrado')">
+                                    <span class="inline-block w-1 h-4 rounded-full bg-rose-500"></span>
+                                    <span>Cerrado</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Paginación -->
+        <nav class="mt-8 flex items-center justify-center gap-2" aria-label="Paginación">
+            @{
+                var prevPage = Math.Max(1, page - 1);
+                var nextPage = Math.Min(pages, page + 1);
+                var prevDisabled = page == 1;
+                var nextDisabled = page == pages;
+            }
+
+            <!-- Botón Anterior -->
+            <a href="@Url.Action("Index", new { q = q, estado = estado, orden = orden, page = prevPage, pageSize = pageSize })"
+               class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 @(prevDisabled ? "pointer-events-none opacity-50" : "")"
+               aria-label="Anterior" aria-disabled="@(prevDisabled ? "true" : "false")" title="Anterior">
+                <svg class="w-3 h-3 text-slate-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 8 14">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M7 1 1.3 6.326a.91.91 0 0 0 0 1.348L7 13" />
+                </svg>
+                <span class="text-sm font-medium text-slate-700">Anterior</span>
+            </a>
+
+            <!-- Números -->
+            <div class="hidden sm:flex items-center gap-2">
+                @for(int i = 1; i <= pages; i++) {
+                    <a href="@Url.Action("Index", new { q = q, estado = estado, orden = orden, page = i, pageSize = pageSize })"
+                       class="px-3 py-2 rounded-lg border text-sm font-medium @(i==page ? "bg-brand text-white border-brand" : "border-slate-300 hover:bg-slate-50")"
+                       aria-current="@(i==page ? "page" : null)">
+                        @i
+                    </a>
+                }
+            </div>
+
+            <!-- Botón Siguiente -->
+            <a href="@Url.Action("Index", new { q = q, estado = estado, orden = orden, page = nextPage, pageSize = pageSize })"
+               class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 @(nextDisabled ? "pointer-events-none opacity-50" : "")"
+               aria-label="Siguiente" aria-disabled="@(nextDisabled ? "true" : "false")" title="Siguiente">
+                <span class="text-sm font-medium text-slate-700">Siguiente</span>
+                <svg class="w-3 h-3 text-slate-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 8 14">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="m1 13 5.7-5.326a.909.909 0 0 0 0-1.348L1 1" />
+                </svg>
+            </a>
+        </nav>
+    }
+
+    @section scripts{
+        <!-- Fuse.js para búsqueda fuzzy -->
+        <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+
+        <script>
+    // Dataset desde Razor para el índice de Fuse
+    window.PROYECTOS_DATA = @Html.Raw(
+        System.Web.Helpers.Json.Encode(
+            Model.Select(p => new {
+                Id = p.IdProyecto,
+                Codigo = p.Codigo,
+                Nombre = p.Nombre,
+                Descripcion = p.Descripcion ?? "",
+                Estado = p.Estado ?? ""
+            })
+        )
+    );
+    const PROYECTOS_BY_ID = Object.fromEntries(window.PROYECTOS_DATA.map(p => [p.Id, p]));
+
+    document.addEventListener('alpine:init', () => {
+      Alpine.store('proyectos', {
+        openCrear: false,
+        codigo: '',
+        nombre: '',
+        async crearRapido(){
+          if(!this.codigo || !this.nombre){ toast('Completa Código y Nombre','warn'); return; }
+          const r = await fetch('@Url.Action("CrearRapido","Proyectos")', {
+            method:'POST', headers:{ 'Content-Type':'application/x-www-form-urlencoded' },
+            body:new URLSearchParams({ codigo:this.codigo, nombre:this.nombre })
+          });
+          const d = await r.json();
+          if(d.ok){
+            toast('Proyecto creado');
+            this.openCrear = false;
+            this.codigo = ''; this.nombre = '';
+            window.location = '@Url.Action("Detalle","Proyectos")' + '/' + d.id;
+          } else {
+            toast(d.msg || 'No se pudo crear','error');
+          }
+        }
+      });
+
+      // Componente de búsqueda con Fuse
+      Alpine.data('buscadorProyectos', () => ({
+        q: '@q'.trim(),
+        estadoSel: '@estado',
+        fuse: null,
+        visibleCount: 0,
+
+        init(){
+          this.fuse = new Fuse(window.PROYECTOS_DATA, {
+            keys: ['Nombre','Codigo','Descripcion'],
+            threshold: 0.35,
+            ignoreLocation: true,
+            minMatchCharLength: 2
+          });
+          this.$nextTick(() => this.filtrar());
+        },
+
+        filtrar(){
+          // Todos los ids
+          let ids = window.PROYECTOS_DATA.map(p => p.Id);
+
+          // Texto
+          const q = (this.q || '').trim();
+          if(q.length >= 2){
+            ids = this.fuse.search(q).map(r => r.item.Id);
+          }
+
+          // Estado
+          const st = (this.estadoSel || '').trim();
+          if(st){
+            ids = ids.filter(id => (PROYECTOS_BY_ID[id].Estado || '') === st);
+          }
+
+          // Aplica al DOM
+          const showSet = new Set(ids);
+          let count = 0;
+          document.querySelectorAll('#gridProyectos [data-proyecto-id]').forEach(el => {
+            const id = +el.getAttribute('data-proyecto-id');
+            const show = showSet.has(id);
+            el.style.display = show ? '' : 'none';
+            if(show) count++;
+          });
+          this.visibleCount = count;
+        }
+      }));
+    });
+
+    function toast(msg,type='ok'){
+      const el = document.getElementById('toast'); if(!el) return;
+      el.className = 'fixed right-4 bottom-4 z-50 px-4 py-3 rounded-xl shadow text-sm '+
+        (type==='ok'?'bg-brand text-white':type==='warn'?'bg-amber-500 text-white':'bg-rose-600 text-white');
+      el.textContent = msg; el.style.display='block';
+      setTimeout(()=>{ el.style.display='none'; }, 2000);
+    }
+
+    async function cambiarEstado(id, estado){
+      const r = await fetch('@Url.Action("CambiarEstado","Proyectos")', {
+        method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body:new URLSearchParams({ id, estado })
+      });
+      const d = await r.json();
+      if(d.ok){ toast('Estado actualizado'); location.reload(); }
+      else toast('No se pudo cambiar','error');
+    }
+        </script>
+
+        <!-- Modal Crear Rápido -->
+        <div x-cloak x-show="$store.proyectos.openCrear"
+             class="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
+            <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+                <h3 class="text-lg font-semibold mb-4">Crear proyecto rápido</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-sm text-slate-700">Código</label>
+                        <input x-model="$store.proyectos.codigo" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-brand" />
+                    </div>
+                    <div>
+                        <label class="text-sm text-slate-700">Nombre</label>
+                        <input x-model="$store.proyectos.nombre" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-brand" />
+                    </div>
+                </div>
+                <div class="mt-5 flex justify-end gap-2">
+                    <button class="px-4 py-2 rounded-xl border" x-on:click="$store.proyectos.openCrear=false">Cancelar</button>
+                    <button class="px-4 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700" x-on:click="$store.proyectos.crearRapido()">Crear</button>
+                </div>
+            </div>
+        </div>
+    }
+</div> <!-- /x-data buscadorProyectos -->

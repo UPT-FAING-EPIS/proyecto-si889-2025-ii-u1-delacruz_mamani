@@ -1,0 +1,40 @@
+﻿@* _TabTareas.cshtml — versión simple *@
+<div class="space-y-4">
+    <div class="flex flex-wrap items-end gap-2">
+        <div class="flex-1 min-w-[220px]">
+            <label class="text-sm">Nueva tarea</label>
+            <input x-model="nuevaTitulo" class="w-full rounded-xl border px-3 py-2" placeholder="Escribe y presiona Agregar">
+        </div>
+        <div>
+            <label class="text-sm">Asignado</label>
+            <select x-model="nuevaAsignado" class="rounded-xl border px-3 py-2 min-w-[180px]">
+                <option value="">— Nadie —</option>
+                <template x-for="m in miembrosProyecto" :key="m.IdUsuario">
+                    <option :value="m.IdUsuario" x-text="m.Nombres"></option>
+                </template>
+            </select>
+        </div>
+        <div>
+            <label class="text-sm">Vence</label>
+            <input type="date" x-model="nuevaFecha" class="rounded-xl border px-3 py-2">
+        </div>
+        <button class="px-4 py-2 rounded-xl bg-emerald-600 text-white" x-on:click="crearTarea">Agregar</button>
+    </div>
+
+    <ul class="divide-y border rounded-xl bg-white">
+        <template x-for="t in tareas" :key="t.IdTarea">
+            <li class="p-3 flex items-center gap-3">
+                <input type="checkbox" class="mt-0.5" :checked="t.Hecho" x-on:change="marcar(t, $event.target.checked)">
+                <input class="flex-1 rounded-md border px-2 py-1" :value="t.Titulo" x-on:change="editarTarea(t,'titulo',$event.target.value)">
+                <input type="date" class="rounded-md border px-2 py-1" :value="ymd(t.FechaVencimiento)" x-on:change="editarTarea(t,'fechavencimiento',$event.target.value)">
+                <select class="rounded-md border px-2 py-1 min-w-[160px]" :value="t.AsignadoA || ''" x-on:change="editarTarea(t,'asignadoa',$event.target.value)">
+                    <option value="">— Nadie —</option>
+                    <template x-for="m in miembrosProyecto" :key="m.IdUsuario">
+                        <option :value="m.IdUsuario" x-text="m.Nombres"></option>
+                    </template>
+                </select>
+                <button class="ml-2 px-2 py-1 rounded-md border border-red-300 text-red-600 hover:bg-red-50" x-on:click="eliminarTarea(t)">Eliminar</button>
+            </li>
+        </template>
+    </ul>
+</div>

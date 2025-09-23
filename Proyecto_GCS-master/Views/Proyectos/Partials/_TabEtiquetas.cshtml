@@ -1,0 +1,24 @@
+﻿<div class="space-y-6">
+    <div>
+        <h3 class="font-semibold mb-2">Etiquetas</h3>
+        <div class="flex gap-2 mb-3">
+            <input x-model="nuevaEtiqueta" placeholder="Nueva etiqueta..." class="rounded-xl border px-3 py-2">
+            <button class="px-3 py-2 rounded-xl border border-slate-300 hover:bg-slate-50" x-on:click="agregarEtiqueta">Agregar</button>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <template x-for="e in etiquetas" :key="e.IdEtiqueta">
+                <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 text-sm">
+                    <span x-text="e.Nombre"></span>
+                    <button class="ml-1 rounded-full bg-red-600 text-white px-2" x-on:click="quitarEtiqueta(e)">×</button>
+                </span>
+            </template>
+        </div>
+    </div>
+
+    <div>
+        <h3 class="font-semibold mb-2">Notas</h3>
+        <textarea x-model="nota" x-on:input.debounce.600ms="guardarNota"
+                  class="w-full min-h-[140px] rounded-xl border px-3 py-2"></textarea>
+        <div class="text-xs text-slate-500 mt-1" x-text="estadoNota"></div>
+    </div>
+</div>

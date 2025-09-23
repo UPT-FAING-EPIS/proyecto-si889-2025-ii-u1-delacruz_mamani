@@ -1,0 +1,107 @@
+﻿@model Proyecto_GCS.Models.Proyecto
+
+@{
+    var estado = Model.Estado ?? "";
+    var badgeClass = estado == "Activo" ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
+                   : estado == "Pausado" ? "bg-amber-50 text-amber-700 ring-1 ring-amber-200"
+                   : "bg-rose-50 text-rose-700 ring-1 ring-rose-200";
+}
+
+<div class="rounded-2xl bg-white border p-5">
+    <div class="flex items-start justify-between gap-4">
+        <div class="flex-1">
+            <div class="text-xs uppercase tracking-wide text-slate-400">@Model.Codigo</div>
+
+            <input class="w-full text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-brand rounded-lg px-1"
+                   value="@Model.Nombre"
+                   x-on:change="guardar('nombre',$event.target.value)" />
+
+            <textarea class="mt-2 w-full text-slate-700 rounded-lg border border-slate-300 px-2 py-2 focus:ring-2 focus:ring-brand"
+                      placeholder="Descripción..."
+                      x-on:change="guardar('descripcion',$event.target.value)">@Model.Descripcion</textarea>
+
+            <!-- Fechas -->
+            <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                <div>
+                    <label class="text-sm text-slate-500">Fecha inicio</label>
+                    <input type="date" x-model="fechaInicio" x-on:change="guardarFechas"
+                           class="w-full rounded-lg border px-2 py-2" />
+                </div>
+                <div>
+                    <label class="text-sm text-slate-500">Fecha fin</label>
+                    <input type="date" x-model="fechaFin" x-on:change="guardarFejas"
+                           class="w-full rounded-lg border px-2 py-2" />
+                </div>
+                @*<div class="flex flex-col">
+                    <label class="text-sm text-slate-500">Rango</label>
+                    <div class="h-10 inline-flex items-center px-3 rounded-full bg-slate-900 text-white text-sm w-max">
+                        <span x-text="rangoBonito() || 'Seleccione fechas'"></span>
+                    </div>
+                    <p x-cloak x-show="msgFecha" class="text-xs text-red-600 mt-1" x-text="msgFecha"></p>
+                </div>*@
+            </div>
+
+            <!-- Progreso -->
+            <div class="mt-4">
+                <div class="flex items-center justify-between text-sm">
+                    <span>Progreso</span>
+                    <span x-text="`${tareasHechas}/${tareas.length}`"></span>
+                </div>
+                <div class="mt-1 h-2 bg-slate-200 rounded-full overflow-hidden">
+                    <div class="h-2 bg-brand" :style="`width:${porcentajeProgreso()}%`"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metodología + Estado -->
+        <div class="ml-4 flex flex-col gap-2">
+            <div class="flex items-center gap-2">
+                <label class="text-sm text-slate-500">Metodología</label>
+                <select class="rounded-lg border px-3 py-2"
+                        x-model="metodologia" x-on:change="cambiarMetodologia(false)">
+                    <option value="">(Seleccionar)</option>
+                    <option value="SCRUM">SCRUM</option>
+                    <option value="KANBAN">KANBAN</option>
+                    <option value="RUP">RUP</option>
+                </select>
+                <template x-if="metodologia">
+                    <button class="px-3 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 text-sm"
+                            title="Regenerar columnas por defecto"
+                            x-on:click="cambiarMetodologia(true)">
+                        Regenerar
+                    </button>
+                </template>
+            </div>
+
+            <!-- Estado con colores -->
+            <div class="relative" x-data="{open:false}">
+                <button class="px-3 py-2 rounded-lg border border-slate-300 text-sm inline-flex items-center gap-2"
+                        x-on:click="open=!open">
+                    <span class="text-slate-700">Estado</span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium @badgeClass">
+                        @estado
+                    </span>
+                </button>
+
+                <div x-cloak x-show="open" x-on:click.outside="open=false"
+                     class="absolute left-2 mt-2 w-44 rounded-xl border bg-white shadow">
+                    <button class="w-full flex items-center gap-2 px-3 py-2 hover:bg-slate-50 text-sm"
+                            onclick="cambiarEstado(@Model.IdProyecto,'Activo')">
+                        <span class="inline-block w-1.5 h-5 rounded-full bg-emerald-500"></span>
+                        <span>Activo</span>
+                    </button>
+                    <button class="w-full flex items-center gap-2 px-3 py-2 hover:bg-slate-50 text-sm"
+                            onclick="cambiarEstado(@Model.IdProyecto,'Pausado')">
+                        <span class="inline-block w-1.5 h-5 rounded-full bg-amber-500"></span>
+                        <span>Pausado</span>
+                    </button>
+                    <button class="w-full flex items-center gap-2 px-3 py-2 hover:bg-slate-50 text-sm"
+                            onclick="cambiarEstado(@Model.IdProyecto,'Cerrado')">
+                        <span class="inline-block w-1.5 h-5 rounded-full bg-rose-500"></span>
+                        <span>Cerrado</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

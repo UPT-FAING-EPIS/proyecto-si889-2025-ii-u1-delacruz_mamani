@@ -1,0 +1,83 @@
+﻿@* ~/Views/Proyectos/Partials/_TabTablero.cshtml *@
+<div class="space-y-3">
+    <template x-if="!metodologia">
+        <div class="text-slate-500">
+            Selecciona una <b>metodología</b> para habilitar el tablero.
+        </div>
+    </template>
+
+    <template x-if="metodologia">
+        <div class="overflow-x-auto">
+            <div class="flex gap-4 min-w-max" x-ref="cols" x-on:dragover.prevent>
+
+                <!-- Columna -->
+                <template x-for="(col, idx) in columnas" :key="col.IdColumna">
+                    <div class="w-80 shrink-0 rounded-xl border bg-white/70 backdrop-blur-sm"
+                         x-data="{ over:false }"
+                         :style="{ borderColor: colorColumna(col) }">
+
+                        <!-- Barra de color superior -->
+                        <div class="h-1.5 rounded-t-xl" :style="{ backgroundColor: colorColumna(col) }"></div>
+
+                        <!-- Encabezado de columna -->
+                        <div class="p-3 border-b flex items-center gap-2">
+                            <span class="inline-block w-2.5 h-2.5 rounded-full"
+                                  :style="{ backgroundColor: colorColumna(col) }"></span>
+                            <input class="font-semibold bg-transparent w-full focus:outline-none"
+                                   :value="col.Titulo"
+                                   x-on:change="renombrarColumna(col, $event.target.value)" />
+                        </div>
+
+                        <!-- Zona de tarjetas -->
+                        <ul class="p-3 space-y-2 min-h-[90px] transition-colors rounded-b-xl"
+                            :data-columna="col.IdColumna"
+                            x-on:dragover.prevent="over=true"
+                            x-on:dragleave="over=false"
+                            x-on:drop="over=false; soltarTarjeta(col)"
+                            :style="over ? { outline: '2px dashed ' + colorColumna(col), outlineOffset:'-6px', backgroundColor:'rgba(0,0,0,0.02)' } : {}">
+
+                            <!-- Tarjeta -->
+                            <template x-for="t in col.tareas" :key="t.IdTarea">
+                                <li class="rounded-lg border p-3 shadow-sm cursor-grab transition hover:shadow-md"
+                                    draggable="true"
+                                    x-on:dragstart="arrastrando=t; colOrigen=col"
+                                    :style="{
+                                        borderLeft: '4px solid ' + (t._colColor || colorColumna(col)),
+                                        backgroundColor: t._colBg || 'transparent'
+                                    }">
+                                    <div class="text-sm font-medium truncate" x-text="t.Titulo"></div>
+
+                                    <div class="mt-2 flex items-center justify-between">
+                                        <!-- Fecha -->
+                                        <span class="inline-flex items-center h-6 px-2 rounded-full text-xs text-white"
+                                              :style="{ backgroundColor: (t._colColor || colorColumna(col)) }"
+                                              x-text="pillFecha(t.FechaVencimiento)"></span>
+
+                                        <!-- Asignado -->
+                                        <template x-if="t.AsignadoNombre">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs text-slate-500 hidden sm:inline"
+                                                      x-text="shortName(t.AsignadoNombre)"></span>
+                                                <div class="w-7 h-7 rounded-full text-white text-xs font-semibold grid place-items-center"
+                                                     :title="t.AsignadoNombre"
+                                                     :style="{ backgroundColor: (t._colColor || colorColumna(col)) }"
+                                                     x-text="initials(t.AsignadoNombre)"></div>
+                                            </div>
+                                        </template>
+                                        <template x-if="!t.AsignadoNombre">
+                                            <div class="w-7 h-7 rounded-full border grid place-items-center" title="Sin asignar">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M12 12c2.761 0 5-2.239 5-5S14.761 2 12 2 7 4.239 7 7s2.239 5 5 5zm0 2c-3.866 0-7 3.134-7 7h2a5 5 0 0 1 10 0h2c0-3.866-3.134-7-7-7z" />
+                                                </svg>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </li>
+                            </template>
+                        </ul>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </template>
+</div>

@@ -1,0 +1,78 @@
+﻿@model Proyecto_GCS.ViewModels.LoginViewModel
+@{
+    ViewBag.Title = "Iniciar sesión";
+    Layout = "~/Views/Shared/_LayoutAuth.cshtml";
+}
+
+@section left {
+    <div class="relative hidden md:block overflow-hidden">
+        <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1200&auto=format&fit=crop"
+             alt="Equipo trabajando" class="h-full w-full object-cover scale-105" />
+        <div class="absolute inset-0 bg-gradient-to-tr from-brand/40 to-transparent"></div>
+    </div>
+}
+
+@using (Html.BeginForm("Login", "Account", FormMethod.Post, new { @class = "space-y-5" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(m => m.ReturnUrl)
+
+    <div class="text-center md:text-left">
+        <h1 class="text-3xl font-extrabold text-slate-900 dark:text-white">Iniciar Sesión</h1>
+        <p class="mt-1 text-slate-600 dark:text-slate-400">Bienvenido 👋</p>
+    </div>
+
+    @Html.ValidationSummary(true, "", new { @class = "text-red-600 text-sm" })
+
+    <div>
+        <label class="block text-sm font-medium">Correo</label>
+        @Html.TextBoxFor(m => m.Correo, new
+        {
+          @type = "email",
+          @class = "mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 dark:border - slate - 700 dark:bg - slate - 900 dark:text - slate - 100",
+          placeholder = "correo@gmail.com",
+            required = "required",
+            autocomplete = "email"
+        })
+        @Html.ValidationMessageFor(m => m.Correo, "", new { @class = "text-red-600 text-xs mt-1 block" })
+    </div>
+
+    <div>
+        @*<div class="mb-1 flex items-center justify-between">
+            <label class="block text-sm font-medium">Contraseña</label>
+            <a href="@Url.Action("ForgotPassword","Account")" class="text-xs text-brand hover:underline">¿Olvidaste tu contraseña?</a>
+        </div>*@
+        <div class="relative">
+            @Html.PasswordFor(m => m.Password, new
+            {
+              @id = "loginPass",
+              @class = "mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 pr-10 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 dark:border - slate - 700 dark:bg - slate - 900 dark:text - slate - 100",
+              placeholder = "••••••••",
+                required = "required",
+                autocomplete = "current-password"
+            })
+            <button type="button"
+                    class="absolute inset-y-0 right-2 my-auto rounded px-2 text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                    onclick="(function(){var i=document.getElementById('loginPass'); var s=i.type==='password'; i.type=s?'text':'password'; this.textContent=s?'Ocultar':'Ver';}).call(this)">
+                Ver
+            </button>
+        </div>
+        @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-red-600 text-xs mt-1 block" })
+    </div>
+
+    if (ViewBag.Error != null)
+    {
+        <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
+            @ViewBag.Error
+        </div>
+    }
+
+    <button class="w-full rounded-xl bg-brand px-4 py-2.5 font-semibold text-white hover:bg-brand-700 transition-transform hover:scale-[1.02]">
+        Ingresar
+    </button>
+
+    <p class="text-center text-sm text-slate-600 dark:text-slate-400">
+        ¿No tienes cuenta?
+        <a class="font-medium text-brand hover:underline" href="@Url.Action("Register","Account")">Regístrate</a>
+    </p>
+}

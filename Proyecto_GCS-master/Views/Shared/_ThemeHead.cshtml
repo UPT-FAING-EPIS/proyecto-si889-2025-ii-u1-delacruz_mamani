@@ -1,0 +1,130 @@
+﻿@* Tailwind + configuración + pre-set de tema *@
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        darkMode: 'class',
+        theme: {
+            extend: {
+                colors: { brand: { DEFAULT: '#7C3AED', 700: '#6D28D9' } },
+                boxShadow: { soft: '0 10px 25px -5px rgb(0 0 0 / 0.15)' }
+            }
+        }
+    }
+</script>
+
+<script>
+    // Tema (dark/light) persistente
+    (function () {
+        var prefer = localStorage.getItem('theme');
+        if (!prefer) prefer = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        if (prefer === 'dark') document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
+    })();
+</script>
+
+<!-- AlpineJS para interacciones -->
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+<style>
+    /* Oculta elementos hasta que Alpine esté listo */
+    [x-cloak] {
+        display: none !important;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(8px)
+        }
+
+        to {
+            opacity: 1;
+            transform: none
+        }
+    }
+
+    .fade-in {
+        animation: fadeIn .35s ease-out
+    }
+
+    @@keyframes slideIn {
+        from {
+            transform: translateX(-12px);
+            opacity: 0
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1
+        }
+    }
+
+    .animate-slideIn {
+        animation: slideIn .25s ease-out
+    }
+</style>
+
+<script>
+  // ---- Helpers globales disponibles en todas las vistas ----
+  window.toast = function(msg, type='ok'){
+    var el = document.getElementById('toast');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'toast';
+      el.style.display = 'none';
+      document.body.appendChild(el);
+    }
+    el.className =
+      'fixed right-4 bottom-4 z-50 px-4 py-3 rounded-xl shadow text-sm fade-in ' +
+      (type==='ok'   ? 'bg-brand text-white'
+       : type==='warn'? 'bg-amber-500 text-white'
+                      : 'bg-red-600 text-white');
+    el.textContent = msg;
+    el.style.display = 'block';
+    setTimeout(function(){ el.style.display='none'; }, 2000);
+  };
+
+  // Cambiar estado de proyecto (usable desde Index/Detalle)
+  window.cambiarEstado = async function(id, estado){
+    try{
+      const r = await fetch('@Url.Action("CambiarEstado","Proyectos")', {
+        method:'POST',
+        headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body:new URLSearchParams({ id, estado })
+      });
+      const d = await r.json();
+      if(d.ok){ toast('Estado actualizado'); location.reload(); }
+      else toast('No se pudo cambiar','error');
+    }catch(e){ toast('Error de red','error'); }
+  };
+
+  // ---- Store Alpine para Proyectos (Crear rápido) ----
+  document.addEventListener('alpine:init', () => {
+    Alpine.store('proyectos', {
+      openCrear: false,
+      codigo: '',
+      nombre: '',
+      async crearRapido(){
+        if(!this.codigo || !this.nombre){ toast('Completa Código y Nombre','warn'); return; }
+        try{
+          const r = await fetch('@Url.Action("CrearRapido","Proyectos")', {
+            method:'POST',
+            headers:{ 'Content-Type':'application/x-www-form-urlencoded' },
+            body:new URLSearchParams({ codigo:this.codigo, nombre:this.nombre })
+          });
+          const d = await r.json();
+          if(d.ok){
+            toast('Proyecto creado');
+            this.openCrear = false;
+            this.codigo = ''; this.nombre = '';
+            window.location = '@Url.Action("Detalle","Proyectos")' + '/' + d.id;
+          }else{
+            toast(d.msg || 'No se pudo crear','error');
+          }
+        }catch(e){
+          toast('Error de red','error');
+        }
+      }
+    });
+  });
+</script>

@@ -1,0 +1,29 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewBag.Title - GCS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    @Html.Partial("_ThemeHead")
+</head>
+<body class="h-screen bg-slate-50 dark:bg-slate-900">
+    <div class="grid h-screen grid-cols-1 md:grid-cols-2">
+        @RenderSection("left", required: false)
+
+        <div class="flex items-center justify-center p-6 md:p-10 bg-white dark:bg-slate-900">
+            <div class="w-full max-w-md fade-in">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm sm:text-base font-bold text-brand">Taskio - Gestor de proyectos</h2>
+                    @Html.Partial("_ThemeToggle")
+                </div>
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+    @RenderSection("scripts", required: false)
+</body>
+</html>
+

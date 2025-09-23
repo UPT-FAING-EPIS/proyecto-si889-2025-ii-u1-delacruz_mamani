@@ -1,0 +1,11 @@
+﻿@model Proyecto_GCS.Models.ProyectoMiembro
+<div class="flex items-center justify-between py-3">
+    <div>
+        <div class="text-sm font-medium">@Model.Nombres <span class="text-slate-400">(@Model.Correo)</span></div>
+        <div class="text-xs text-slate-500">Rol: <span class="font-medium">@Model.RolMiembro</span></div>
+    </div>
+    <button class="text-sm px-3 py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700"
+            onclick="quitarMiembro(@Model.IdProyecto,@Model.IdUsuario)">
+        Quitar
+    </button>
+</div>

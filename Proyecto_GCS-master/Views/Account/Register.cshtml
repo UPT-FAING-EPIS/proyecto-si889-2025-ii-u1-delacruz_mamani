@@ -1,0 +1,106 @@
+﻿@model Proyecto_GCS.ViewModels.RegistroViewModel
+@{
+    ViewBag.Title = "Registro";
+    Layout = "~/Views/Shared/_LayoutAuth.cshtml";
+}
+
+@section left {
+    <div class="relative hidden md:block overflow-hidden">
+        <img src="https://images.unsplash.com/photo-1556157382-97eda2d62296?q=80&w=1200&auto=format&fit=crop"
+             alt="Registro" class="h-full w-full object-cover scale-105" />
+        <div class="absolute inset-0 bg-gradient-to-tr from-brand/40 to-transparent"></div>
+    </div>
+}
+
+@using (Html.BeginForm("Register", "Account", FormMethod.Post, new { @class = "space-y-5" }))
+{
+    @Html.AntiForgeryToken()
+
+    <div class="text-center md:text-left">
+        <h1 class="text-3xl font-extrabold text-slate-900 dark:text-white">Registro</h1>
+        <p class="mt-1 text-slate-600 dark:text-slate-400">Bienvenido, crea tu cuenta ✨</p>
+    </div>
+
+    @Html.ValidationSummary(true, "", new { @class = "text-red-600 text-sm" })
+
+    <div>
+        <label class="block text-sm font-medium">Nombre completo</label>
+        @Html.TextBoxFor(m => m.Nombres, new
+        {
+          @class = "mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 dark:border - slate - 700 dark:bg - slate - 900 dark:text - slate - 100",
+          placeholder = "Juan Pérez",
+            required = "required",
+            autocomplete = "name"
+        })
+        @Html.ValidationMessageFor(m => m.Nombres, "", new { @class = "text-red-600 text-xs mt-1 block" })
+    </div>
+
+    <div>
+        <label class="block text-sm font-medium">Correo</label>
+        @Html.TextBoxFor(m => m.Correo, new
+        {
+          @type = "email",
+          @class = "mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 dark:border - slate - 700 dark:bg - slate - 900 dark:text - slate - 100",
+          placeholder = "usuario@dominio.com",
+            required = "required",
+            autocomplete = "email"
+        })
+        @Html.ValidationMessageFor(m => m.Correo, "", new { @class = "text-red-600 text-xs mt-1 block" })
+    </div>
+
+    <div>
+        <label class="block text-sm font-medium">Contraseña</label>
+        <div class="relative">
+            @Html.PasswordFor(m => m.Password, new
+            {
+              @id = "regPass",
+              @class = "mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 pr-10 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 dark:border - slate - 700 dark:bg - slate - 900 dark:text - slate - 100",
+              placeholder = "••••••••",
+                required = "required",
+                autocomplete = "new-password"
+            })
+            <button type="button"
+                    class="absolute inset-y-0 right-2 my-auto rounded px-2 text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                    onclick="(function(){var i=document.getElementById('regPass'); var s=i.type==='password'; i.type=s?'text':'password'; this.textContent=s?'Ocultar':'Ver';}).call(this)">
+                Ver
+            </button>
+        </div>
+        @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-red-600 text-xs mt-1 block" })
+    </div>
+
+    <div>
+        <label class="block text-sm font-medium">Confirmar contraseña</label>
+        <div class="relative">
+            @Html.PasswordFor(m => m.ConfirmarPassword, new
+            {
+              @id = "regPass2",
+              @class = "mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 pr-10 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 dark:border - slate - 700 dark:bg - slate - 900 dark:text - slate - 100",
+              placeholder = "••••••••",
+                required = "required",
+                autocomplete = "new-password"
+            })
+            <button type="button"
+                    class="absolute inset-y-0 right-2 my-auto rounded px-2 text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                    onclick="(function(){var i=document.getElementById('regPass2'); var s=i.type==='password'; i.type=s?'text':'password'; this.textContent=s?'Ocultar':'Ver';}).call(this)">
+                Ver
+            </button>
+        </div>
+        @Html.ValidationMessageFor(m => m.ConfirmarPassword, "", new { @class = "text-red-600 text-xs mt-1 block" })
+    </div>
+
+    if (ViewBag.Error != null)
+    {
+        <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
+            @ViewBag.Error
+        </div>
+    }
+
+    <button class="w-full rounded-xl bg-brand px-4 py-2.5 font-semibold text-white hover:bg-brand-700 transition-transform hover:scale-[1.02]">
+        Registrarme
+    </button>
+
+    <p class="text-center text-sm text-slate-600 dark:text-slate-400">
+        ¿Ya tienes cuenta?
+        <a class="font-medium text-brand hover:underline" href="@Url.Action("Login","Account")">Inicia sesión</a>
+    </p>
+}

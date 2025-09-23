@@ -1,0 +1,119 @@
+﻿@* ~/Views/Proyectos/Detalle.cshtml *@
+@model Proyecto_GCS.Models.Proyecto
+@using Proyecto_GCS.Models
+
+@{
+    ViewBag.Title = "Proyecto";
+    var esOwner = (bool)(ViewBag.EsOwner ?? false);
+}
+
+<style>
+    /* Para ocultar elementos hasta que Alpine cargue */
+    [x-cloak] {
+        display: none !important;
+    }
+</style>
+
+<div x-data="detalleProyecto(
+              @Model.IdProyecto,
+              '@(Model.FechaInicio?.ToString("yyyy-MM-dd") ?? "")',
+              '@(Model.FechaFin?.ToString("yyyy-MM-dd") ?? "")'
+            )"
+     x-init="init()"
+     class="space-y-6">
+
+    @* ---------- HEADER (nombre, descripción, fechas, progreso, metodología y estado con colores) ---------- *@
+    @Html.Partial("~/Views/Proyectos/Partials/_ProyectoHeader.cshtml", Model)
+
+    @* ---------- TABS ---------- *@
+    <div class="rounded-2xl bg-white border p-5">
+        <div class="flex flex-wrap gap-2 mb-4">
+            <button class="px-3 py-2 rounded-xl border text-sm"
+                    :class="tab==='tablero' ? 'bg-brand text-white border-brand' : 'border-slate-300 hover:bg-slate-50'"
+                    x-on:click="tab='tablero'">
+                Tablero
+            </button>
+
+            <button class="px-3 py-2 rounded-xl border text-sm"
+                    :class="tab==='miembros' ? 'bg-brand text-white border-brand' : 'border-slate-300 hover:bg-slate-50'"
+                    x-on:click="tab='miembros'">
+                Miembros
+            </button>
+
+            <button class="px-3 py-2 rounded-xl border text-sm"
+                    :class="tab==='tareas' ? 'bg-brand text-white border-brand' : 'border-slate-300 hover:bg-slate-50'"
+                    x-on:click="tab='tareas'">
+                Tareas
+            </button>
+
+            <button class="px-3 py-2 rounded-xl border text-sm"
+                    :class="tab==='etiquetas' ? 'bg-brand text-white border-brand' : 'border-slate-300 hover:bg-slate-50'"
+                    x-on:click="tab='etiquetas'">
+                Etiquetas &amp; Notas
+            </button>
+        </div>
+
+        <div x-show="tab==='tablero'">
+            @Html.Partial("~/Views/Proyectos/Partials/_TabTablero.cshtml")
+        </div>
+
+        <div x-show="tab==='miembros'">
+            @Html.Partial("~/Views/Proyectos/Partials/_TabMiembros.cshtml")
+        </div>
+
+        <div x-show="tab==='tareas'">
+            @Html.Partial("~/Views/Proyectos/Partials/_TabTareas.cshtml")
+        </div>
+
+        <div x-show="tab==='etiquetas'">
+            @Html.Partial("~/Views/Proyectos/Partials/_TabEtiquetas.cshtml")
+        </div>
+    </div>
+</div>
+
+@Html.Partial("~/Views/Shared/_Toast.cshtml")
+
+@section scripts{
+    <script>
+        // Config para endpoints (usada por utils.js y proyectosdetalle.js)
+        window.ProyectosCfg = {
+            idProyecto: @Model.IdProyecto,
+            urls: {
+                // Estado / Campos
+                CambiarEstado: '@Url.Action("CambiarEstado","Proyectos")',
+                EditarCampo: '@Url.Action("EditarCampo","Proyectos")',
+
+                // Tablero / metodología
+                TableroData: '@Url.Action("TableroData","Proyectos")',
+                SetMetodologia: '@Url.Action("SetMetodologia","Proyectos")',
+                MoverTareaTablero: '@Url.Action("MoverTareaTablero","Proyectos")',
+                RenombrarColumna: '@Url.Action("RenombrarColumna","Proyectos")',
+
+                // Miembros
+                MiembrosJson: '@Url.Action("MiembrosJson","Proyectos")',
+                BuscarUsuarios: '@Url.Action("BuscarUsuarios","Proyectos")',
+                AgregarMiembro: '@Url.Action("AgregarMiembro","Proyectos")',
+                QuitarMiembro: '@Url.Action("QuitarMiembro","Proyectos")',
+                InvitarPorCorreo: '@Url.Action("InvitarPorCorreo","Proyectos")',
+
+                // Tareas
+                ListarTareas: '@Url.Action("ListarTareas","Proyectos")',
+                CrearTarea: '@Url.Action("CrearTarea","Proyectos")',
+                MarcarTarea: '@Url.Action("MarcarTarea","Proyectos")',
+                EditarTarea: '@Url.Action("EditarTarea","Proyectos")',
+                EliminarTarea: '@Url.Action("EliminarTarea","Proyectos")',
+                SetAsignacionesTarea: '@Url.Action("SetAsignacionesTarea","Proyectos")',
+
+                // Etiquetas / Notas
+                ListarEtiquetas: '@Url.Action("ListarEtiquetas","Proyectos")',
+                AgregarEtiqueta: '@Url.Action("AgregarEtiqueta","Proyectos")',
+                QuitarEtiqueta: '@Url.Action("QuitarEtiqueta","Proyectos")',
+                ObtenerNota: '@Url.Action("ObtenerNota","Proyectos")',
+                GuardarNota: '@Url.Action("GuardarNota","Proyectos")'
+            }
+        };
+    </script>
+
+    <script src="~/Content/js/utils.js"></script>
+    <script src="~/Content/js/proyectosdetalle.js"></script>
+}

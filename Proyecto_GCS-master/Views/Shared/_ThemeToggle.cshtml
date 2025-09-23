@@ -1,0 +1,29 @@
+﻿<button id="btnTheme"
+        class="inline-flex items-center gap-2 text-sm px-2 py-1 rounded-lg border border-slate-200 hover:bg-slate-100
+               dark:border-slate-600 dark:hover:bg-slate-700"
+        type="button" aria-label="Cambiar tema">
+    <span id="themeIcon">🌙</span>
+    <span id="themeText">Oscuro</span>
+</button>
+
+<script>
+  (function () {
+    const root = document.documentElement;
+    const btn = document.getElementById('btnTheme');
+    const icon = document.getElementById('themeIcon');
+    const text = document.getElementById('themeText');
+
+    function apply(mode) {
+      if (mode === 'dark') {
+        root.classList.add('dark'); icon.textContent = '☀️'; text.textContent = 'Claro';
+      } else {
+        root.classList.remove('dark'); icon.textContent = '🌙'; text.textContent = 'Oscuro';
+      }
+      localStorage.setItem('theme', mode);
+    }
+
+    apply(localStorage.getItem('theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+    btn?.addEventListener('click', () => apply(root.classList.contains('dark') ? 'light' : 'dark'));
+  })();
+</script>
+

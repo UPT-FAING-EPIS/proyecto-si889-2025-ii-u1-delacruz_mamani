@@ -1,0 +1,170 @@
+﻿@model Proyecto_GCS.Models.DashboardVm
+@using System.Linq
+@{
+    ViewBag.Title = "Inicio";
+    var userName = Model?.UserName ?? ((User?.Identity?.IsAuthenticated ?? false) ? User.Identity.Name : "Invitado");
+}
+
+<!-- Encabezado -->
+<section class="mb-6">
+    <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
+        ¡Hola, @userName!
+    </h1>
+    <p class="mt-1 text-slate-600 dark:text-slate-400">
+        Bienvenido a <span class="font-medium text-brand">Taskio - Gestor de proyectos</span>.
+    </p>
+</section>
+
+<!-- KPIs -->
+<section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <!-- Proyectos -->
+    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft dark:border-slate-800 dark:bg-slate-900 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Proyectos</p>
+                <p class="mt-1 text-3xl font-bold text-slate-900 dark:text-white">@Model?.ProyectosTotal</p>
+            </div>
+            <!-- Kanban icon -->
+            <svg class="h-10 w-10 text-brand/90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="5" y="4" width="6" height="16" rx="1.5" />
+                <rect x="13" y="4" width="6" height="10" rx="1.5" />
+            </svg>
+        </div>
+        <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Activos: @Model?.ProyActivos • Pausados: @Model?.ProyPausados • Cerrados: @Model?.ProyCerrados</p>
+    </div>
+
+    <!-- Cambios pendientes -->
+    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft dark:border-slate-800 dark:bg-slate-900 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Cambios pendientes</p>
+                <p class="mt-1 text-3xl font-bold text-slate-900 dark:text-white">@Model?.CambiosPendientes</p>
+            </div>
+            <!-- Repeat icon -->
+            <svg class="h-10 w-10 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v6h6M20 20v-6h-6M20 8A8 8 0 006 6M4 16a8 8 0 0014 2" />
+            </svg>
+        </div>
+        <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">En @Model?.CambiosProyectos proyecto(s)</p>
+    </div>
+
+    <!-- Issues abiertos -->
+    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft dark:border-slate-800 dark:bg-slate-900 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Issues abiertos</p>
+                <p class="mt-1 text-3xl font-bold text-slate-900 dark:text-white">@Model?.IssuesAbiertos</p>
+            </div>
+            <!-- Bug icon -->
+            <svg class="h-10 w-10 text-rose-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V5a4 4 0 118 0v2M3 13h4m10 0h4M5 17l2-2m10 2l-2-2M12 22a7 7 0 007-7V9H5v6a7 7 0 007 7z" />
+            </svg>
+        </div>
+        <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Críticos: @Model?.IssuesCriticos • Mayores: @Model?.IssuesMayores • Menores: @Model?.IssuesMenores</p>
+    </div>
+
+    <!-- Deploys hoy -->
+    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft dark:border-slate-800 dark:bg-slate-900 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Deploys hoy</p>
+                <p class="mt-1 text-3xl font-bold text-slate-900 dark:text-white">@Model?.DeploysHoy</p>
+            </div>
+            <!-- Rocket -->
+            <svg class="h-10 w-10 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14 4l6 6-6 6-6-6 6-6z" transform="rotate(45 12 12)" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16l-3 3M9.5 14.5L7 17" />
+            </svg>
+        </div>
+        <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Último @Model?.UltimoDeployHace</p>
+    </div>
+</section>
+
+<!-- Grid inferior -->
+<section class="mt-6 grid gap-4 lg:grid-cols-3">
+    <!-- Actividad reciente -->
+    <div class="lg:col-span-2 rounded-2xl border border-slate-200 bg-white shadow-soft dark:border-slate-800 dark:bg-slate-900">
+        <div class="flex items-center justify-between px-5 py-3 border-b border-slate-200 dark:border-slate-800">
+            <h3 class="font-semibold text-slate-900 dark:text-white">Actividad reciente</h3>
+            <a href="@Url.Action("Index","Proyectos")" class="text-sm text-brand hover:underline">Ver todo</a>
+        </div>
+
+        @if (Model != null && Model.ActividadReciente != null && Model.ActividadReciente.Any())
+        {
+            <ul class="divide-y divide-slate-200 dark:divide-slate-800">
+                @foreach (var a in Model.ActividadReciente)
+                {
+                    <li class="px-5 py-3 flex items-start gap-3">
+                        <svg class="h-5 w-5 mt-0.5 text-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3M5 12a7 7 0 1114 0 7 7 0 01-14 0z" />
+                        </svg>
+                        <p class="text-sm text-slate-700 dark:text-slate-300">
+                            [@a.FechaCreacionUtc.ToLocalTime().ToString("g")]
+                            @if (a.Hecho)
+                            {
+                                <text> Se completó la tarea <strong>@a.Titulo</strong> en <strong>@a.ProyectoNombre</strong>.</text>
+                            }
+                            else
+                            {
+                                <text> Se creó/actualizó la tarea <strong>@a.Titulo</strong> (@(a.Estado ?? "—")) en <strong>@a.ProyectoNombre</strong>.</text>
+                            }
+                        </p>
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <div class="px-5 py-6 text-sm text-slate-500">Sin actividad por ahora.</div>
+        }
+    </div>
+
+    <!-- Acciones rápidas + Estado -->
+    <div class="space-y-4">
+        <!-- Acciones rápidas -->
+        <div class="rounded-2xl border border-slate-200 bg-white shadow-soft dark:border-slate-800 dark:bg-slate-900">
+            <div class="px-5 py-3 border-b border-slate-200 dark:border-slate-800">
+                <h3 class="font-semibold text-slate-900 dark:text-white">Acciones rápidas</h3>
+            </div>
+            <div class="p-5 grid gap-2">
+                <a class="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2.5 font-semibold text-white hover:bg-brand-700 transition"
+                   href="@Url.Action("Index","Proyectos")">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" /></svg>
+                    Ver proyectos
+                </a>
+                <a class="inline-flex items-center justify-center gap-2 rounded-xl border border-brand/30 px-4 py-2.5 font-medium text-brand hover:bg-brand/5 transition"
+                   href="@Url.Action("Index","Proyectos")">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v6h6M20 20v-6h-6" /></svg>
+                    Solicitud de cambio
+                </a>
+                <a class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 font-medium text-slate-700 hover:bg-slate-100
+                  dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 transition"
+                   href="@Url.Action("Index","Proyectos")">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17l6-6 4 4 6-6" /></svg>
+                    Subir artefacto
+                </a>
+            </div>
+        </div>
+
+        <!-- Estado de servicios -->
+        <div class="rounded-2xl border border-slate-200 bg-white shadow-soft dark:border-slate-800 dark:bg-slate-900">
+            <div class="px-5 py-3 border-b border-slate-200 dark:border-slate-800">
+                <h3 class="font-semibold text-slate-900 dark:text-white">Estado de servicios</h3>
+            </div>
+            <div class="p-5 space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-slate-700 dark:text-slate-300">API Gestor</span>
+                    <span class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">OK</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-slate-700 dark:text-slate-300">API ComprasTicket</span>
+                    <span class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">OK</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-slate-700 dark:text-slate-300">MongoDB</span>
+                    <span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">Carga</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
