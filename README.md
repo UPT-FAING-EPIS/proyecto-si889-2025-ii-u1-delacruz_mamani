@@ -10,3 +10,10 @@
 # Alumnos :
   * Gilmer Mamani Condori
   * Rodrigo de la Cruz
+
+# Informacion de Proyecto 
+  * Lenguaje de programación (C#, VB, etc.)
+  * Framework usado (por ejemplo, .NET Framework 4.7, .NET Core 3.1, etc.).
+  * Versión de Visual Studio recomendada.
+  * Dependencias/librerías
+  * Base de DAtos SQLSERVER alojado en Soome
