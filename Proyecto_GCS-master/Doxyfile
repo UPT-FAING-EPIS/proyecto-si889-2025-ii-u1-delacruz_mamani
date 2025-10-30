@@ -1,0 +1,29 @@
+PROJECT_NAME           = "Proyecto GCS"
+OUTPUT_DIRECTORY       = ./doxygen-output
+CREATE_SUBDIRS         = NO
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+GENERATE_LATEX         = NO
+
+
+INPUT                  = Proyecto_GCS-master
+FILE_PATTERNS          = *.cs *.cshtml *.csproj
+
+RECURSIVE              = YES
+EXTRACT_ALL            = YES
+OPTIMIZE_OUTPUT_FOR_C  = NO
+OPTIMIZE_OUTPUT_JAVA   = NO
+OPTIMIZE_OUTPUT_VHDL   = NO
+
+
+HAVE_DOT               = YES
+DOT_PATH               =
+DOT_FONTNAME           = Helvetica
+CLASS_DIAGRAMS         = YES
+CALL_GRAPH             = NO
+CALLER_GRAPH           = NO
+DOT_IMAGE_FORMAT       = png
+
+GENERATE_TREEVIEW      = YES
+GENERATE_DEPENDENCY_GRAPH = YES
+GENERATE_CALL_GRAPH    = NO

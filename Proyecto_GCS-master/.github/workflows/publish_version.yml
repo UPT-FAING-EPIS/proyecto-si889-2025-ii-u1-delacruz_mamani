@@ -1,0 +1,57 @@
+name: Publish Version
+
+on:
+  push:
+    tags:
+      - 'v*'   # Ejecutar cuando se haga push de una etiqueta como v1.0.0
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      # 1️⃣ Clonar el repositorio
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2️⃣ Configurar .NET
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '6.0.x'  # Usa la versión adecuada según tu proyecto
+
+      # 3️⃣ Restaurar dependencias
+      - name: Restore dependencies
+        run: dotnet restore Proyecto_GCS-master/Proyecto_GCS.sln
+
+      # 4️⃣ Compilar el proyecto
+      - name: Build project
+        run: dotnet build Proyecto_GCS-master/Proyecto_GCS.sln --configuration Release --no-restore
+
+      # 5️⃣ Ejecutar pruebas unitarias
+      - name: Run unit tests
+        run: dotnet test Proyecto_GCS-master/Proyecto_GCS.sln --collect:"XPlat Code Coverage" --no-build --verbosity normal
+
+      # 6️⃣ Generar reporte de cobertura
+      - name: Report coverage
+        uses: danielpalme/ReportGenerator-GitHub-Action@v5
+        with:
+          reports: '**/coverage.cobertura.xml'
+          targetdir: 'coverage-report'
+          reporttypes: 'HtmlInline_AzurePipelines'
+
+      # 7️⃣ Publicar reporte en GitHub Pages
+      - name: Deploy coverage report to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./coverage-report
+
+      # 8️⃣ Crear release
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

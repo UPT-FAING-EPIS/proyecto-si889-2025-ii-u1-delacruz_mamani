@@ -1,0 +1,80 @@
+name: Publish docs and class diagrams
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  generate-docs:
+    name: Generate documentation (Doxygen) and publish to GitHub Pages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies (Doxygen, Graphviz)
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y doxygen graphviz
+
+      - name: Verify folder structure (list Proyecto_GCS-master)
+        run: |
+          echo "Listing Proyecto_GCS-master contents:"
+          ls -la Proyecto_GCS-master || true
+
+      - name: Run Doxygen (generate HTML & diagrams)
+        working-directory: ${{ github.workspace }}
+        run: |
+          if [ -f "Proyecto_GCS-master/Doxyfile" ]; then
+            echo "Running doxygen with Proyecto_GCS-master/Doxyfile"
+            doxygen Proyecto_GCS-master/Doxyfile
+          elif [ -f "Doxyfile" ]; then
+            echo "Running doxygen with Doxyfile at repo root"
+            doxygen Doxyfile
+          else
+            echo "No Doxyfile found at Proyecto_GCS-master/Doxyfile nor at repo root. Exiting with status 1."
+            exit 1
+          fi
+
+      - name: Show generated html folder (debug)
+        run: |
+          if [ -d "doxygen-output/html" ]; then
+            echo "Doxygen HTML generated at doxygen-output/html"
+            ls -la doxygen-output/html | sed -n '1,200p' || true
+          elif [ -d "Proyecto_GCS-master/html" ]; then
+            echo "Doxygen HTML generated at Proyecto_GCS-master/html"
+            ls -la Proyecto_GCS-master/html | sed -n '1,200p' || true
+          else
+            echo "No html output found in expected locations (doxygen-output/html or Proyecto_GCS-master/html)"
+            # continue so action can fail at deploy step
+          fi
+
+      - name: Prepare pages directory
+        run: |
+          # Prefer the Doxygen output location doxygen-output/html (de la plantilla Doxyfile anterior)
+          if [ -d "doxygen-output/html" ]; then
+            cp -R doxygen-output/html ./site
+          elif [ -d "Proyecto_GCS-master/html" ]; then
+            cp -R Proyecto_GCS-master/html ./site
+          else
+            echo "No HTML documentation generated. Aborting deploy step."
+            exit 1
+          fi
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          # optional: publish_branch: gh-pages
+
+      - name: Show pages deployed
+        run: |
+          echo "If deploy succeeded, GitHub Pages will serve the site from gh-pages branch (or configured branch)."
+
